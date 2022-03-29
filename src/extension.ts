@@ -1,13 +1,17 @@
 import * as vscode from "vscode";
 import FileWatcher from "./core/FIleWatcher";
+import importFixer from "./core/importfixer";
 
 function subscribeCommands(context: vscode.ExtensionContext) {
-  const autofix = vscode.commands.registerCommand("extension.fixImport", () => {
+  const autoFix = vscode.commands.registerCommand("extension.fixImport", () => {
     const editor = vscode.window.activeTextEditor; // 每次运行选中文件
+    if (editor) {
+      importFixer(editor);
+    }
   });
 
   // 注册插件
-  context.subscriptions.push(autofix);
+  context.subscriptions.push(autoFix);
 }
 
 export function activate(context: vscode.ExtensionContext) {
