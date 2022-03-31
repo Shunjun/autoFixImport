@@ -2,7 +2,7 @@
   "name": "auto-sort-import",
   "displayName": "auto-sort-import",
   "description": "",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "ShunJun",
   "engines": {
     "vscode": "^1.65.0"
@@ -15,6 +15,12 @@
     "type": "git",
     "url": "https://github.com/Shunjun/autoFixImport"
   },
+  "keywords": [
+    "import",
+    "sort",
+    "auto-sort-import",
+    "sort import"
+  ],
   "activationEvents": [
     "*",
     "onLanguage:javascript",
@@ -69,6 +75,7 @@
   },
   "scripts": {
     "build": "vsce package",
+    "publish": "vsce publish",
     "vscode:prepublish": "yarn run package",
     "compile": "webpack",
     "watch": "webpack --watch",

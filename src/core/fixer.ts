@@ -96,7 +96,7 @@ function getReplaceSentence(editor: vscode.TextEditor) {
   const tempSentences: Sentence[] = [];
 
   let i = 0;
-  while (i < Math.min(fileLinesNumber, 50)) {
+  while (i < Math.min(fileLinesNumber, 1000000)) {
     const sentence = new Sentence(editor, i);
 
     if (sentence.type === "other") {

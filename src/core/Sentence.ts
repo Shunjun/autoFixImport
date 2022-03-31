@@ -64,7 +64,7 @@ export class Sentence {
     const endRegExp = endRegExpMap[this.type];
 
     let curLine = this.startLine;
-    while (curLine < Math.min(fileLinesNumber, 50)) {
+    while (curLine < Math.min(fileLinesNumber, 1000000)) {
       const currentLine = document.lineAt(curLine);
       const currentText = currentLine.text;
       const matches = currentText.match(endRegExp);
