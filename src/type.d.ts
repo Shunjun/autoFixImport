@@ -6,6 +6,8 @@ declare type SentenceType = "import" | "annotation" | "empty" | "other";
 
 declare type AnnotationType = "single" | "multiLine";
 
+declare type SuffixType = "js" | "mjs" | "jsx" | "ts" | "tsx";
+
 declare interface Config extends WorkspaceConfiguration {
   /**
    * 是否使用空行分隔
@@ -25,5 +27,5 @@ declare interface Config extends WorkspaceConfiguration {
   /**
    * 启用排序功能的文件后缀
    */
-  suffix: ("js" | "mjs" | "jsx" | "ts" | "tsx")[];
+  suffix: SuffixType[];
 }

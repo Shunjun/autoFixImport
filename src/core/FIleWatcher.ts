@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import { SuffixType } from "../type";
+import getConfig from "../utils/getConfig";
 import handleError from "../utils/handleError";
 import { throttle } from "../utils/throttle";
 import fixer from "./fixer";
@@ -21,9 +23,9 @@ class FileWatcher {
     //   return;
     // }
 
-    const { suffix } = vscode.workspace.getConfiguration("autoFixImport");
+    const { suffix } = getConfig();
     const fileName = e.document?.fileName;
-    const fileSuffix = fileName.split(".").pop();
+    const fileSuffix = fileName.split(".").pop() as SuffixType;
     if (!fileSuffix || !suffix.includes(fileSuffix)) {
       return;
     }

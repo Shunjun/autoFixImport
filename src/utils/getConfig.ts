@@ -4,7 +4,7 @@ import { Config, ImportType } from "../type";
 const defaultSort: ImportType[] = ["external", "absolute", "relative", "style"];
 
 function getConfig(): Config {
-  const config = vscode.workspace.getConfiguration("autoFixImport") as Config;
+  const config = vscode.workspace.getConfiguration("autoSortImport") as Config;
 
   const sort = config.sort.concat(
     defaultSort.filter((item) => !config.sort.includes(item))
