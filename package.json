@@ -1,14 +1,20 @@
 {
-  "name": "autofiximport",
-  "displayName": "autofiximport",
+  "name": "auto-sort-import",
+  "displayName": "auto-sort-import",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
+  "publisher": "ShunJun",
   "engines": {
     "vscode": "^1.65.0"
   },
   "categories": [
     "Other"
   ],
+  "homepage": "https://github.com/Shunjun/autoFixImport",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shunjun/autoFixImport"
+  },
   "activationEvents": [
     "*",
     "onLanguage:javascript",
@@ -19,14 +25,14 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "Auto fix Import Order",
+      "title": "Auto Sort Import",
       "properties": {
-        "autoFixImport.blank": {
+        "autoSortImport.blank": {
           "type": "boolean",
           "default": true,
-          "description": "Divide with blank line"
+          "description": "使用空行分隔不同类型的import, 默认: true"
         },
-        "autoFixImport.sort": {
+        "autoSortImport.sort": {
           "type": "array",
           "default": [
             "external",
@@ -34,14 +40,14 @@
             "relative",
             "style"
           ],
-          "description": "Sort import types"
+          "description": "Import 排序规则,默认:['external','absolute','relative','style']"
         },
-        "autoFixImport.removeAnnotation": {
+        "autoSortImport.removeAnnotation": {
           "type": "boolean",
           "default": false,
-          "description": "Remove annotation in import block"
+          "description": "移除 Import 块内的注释, 默认:false"
         },
-        "autoFixImport.suffix": {
+        "autoSortImport.suffix": {
           "type": "array",
           "default": [
             "js",
@@ -50,7 +56,7 @@
             "ts",
             "tsx"
           ],
-          "description": "Fix import in those file"
+          "description": "启用的文件类型, 默认:['js','mjs','jsx','ts','tsx']"
         }
       }
     },

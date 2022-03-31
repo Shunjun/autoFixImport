@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { AnnotationType, ImportType, SentenceType } from "../type";
-import getEol from "../utils/getEol";
 import Range from "../utils/Range";
 
 const endRegExpMap = {
