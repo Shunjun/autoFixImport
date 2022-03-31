@@ -4,11 +4,14 @@
  * @param delay
  * @returns
  */
-export function throttle(fn: () => any, delay: number = 5000) {
-  return function (lastTime: number) {
+export function throttle<T = unknown>(
+  fn: (...args: T[]) => any,
+  delay: number = 5000
+) {
+  return function (lastTime: number, ...args: T[]) {
     const now = Date.now();
     if (!lastTime || now - lastTime > delay) {
-      fn();
+      fn(...args);
       return now;
     }
     return lastTime;

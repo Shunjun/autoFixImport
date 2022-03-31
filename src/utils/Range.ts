@@ -12,7 +12,7 @@ class Range {
   constructor(obj: vscode.Range | RangeData) {
     if ("startLine" in obj) {
       this.range = new vscode.Range(
-        obj.endLine,
+        obj.startLine,
         obj.startCharacter,
         obj.endLine,
         obj.endCharacter

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import FileWatcher from "./core/FIleWatcher";
-import importFixer from "./core/importfixer";
+import importFixer from "./core/fixer";
 
 function subscribeCommands(context: vscode.ExtensionContext) {
   const autoFix = vscode.commands.registerCommand("extension.fixImport", () => {

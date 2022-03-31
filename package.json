@@ -2,7 +2,7 @@
   "name": "autofiximport",
   "displayName": "autofiximport",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.65.0"
   },
@@ -21,10 +21,36 @@
       "type": "object",
       "title": "Auto fix Import Order",
       "properties": {
-        "autoFixImport.": {
+        "autoFixImport.blank": {
           "type": "boolean",
           "default": true,
-          "description": "不同 Import 中间是否插入空格"
+          "description": "Divide with blank line"
+        },
+        "autoFixImport.sort": {
+          "type": "array",
+          "default": [
+            "external",
+            "absolute",
+            "relative",
+            "style"
+          ],
+          "description": "Sort import types"
+        },
+        "autoFixImport.removeAnnotation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remove annotation in import block"
+        },
+        "autoFixImport.suffix": {
+          "type": "array",
+          "default": [
+            "js",
+            "mjs",
+            "jsx",
+            "ts",
+            "tsx"
+          ],
+          "description": "Fix import in those file"
         }
       }
     },

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import handleError from "../utils/handleError";
 import { throttle } from "../utils/throttle";
-import importFixer from "./importfixer";
+import fixer from "./fixer";
 
 interface FileInfoType {
   fileName: string;
@@ -17,25 +17,31 @@ class FileWatcher {
   }
 
   startWatch(e: vscode.TextDocumentWillSaveEvent) {
-    if (e.document.isDirty) {
+    // if (e.document.isDirty) {
+    //   return;
+    // }
+
+    const { suffix } = vscode.workspace.getConfiguration("autoFixImport");
+    const fileName = e.document?.fileName;
+    const fileSuffix = fileName.split(".").pop();
+    if (!fileSuffix || !suffix.includes(fileSuffix)) {
       return;
     }
     try {
-      const fileName = e.document?.fileName;
       const fileInfo = this.updateFileList(fileName);
       const editor = vscode.window.activeTextEditor;
-
-      const throttleFn = throttle(() => {
-        if (editor) {
-          importFixer(editor);
-        }
-      });
-      const lastItem = this.lastFixFile[this.lastFixFile.length - 1];
-      lastItem.lastTime = throttleFn(fileInfo.lastTime);
+      const lastItem = this.lastFixFile[this.lastFixFile.length - 1] || {};
+      lastItem.lastTime = this.throttleFixer(fileInfo.lastTime, editor);
     } catch (error: any) {
       handleError(error);
     }
   }
+
+  throttleFixer = throttle((editor?: vscode.TextEditor) => {
+    if (editor) {
+      fixer(editor);
+    }
+  });
 
   updateFileList(fileName: string) {
     const fileList = this.lastFixFile;
