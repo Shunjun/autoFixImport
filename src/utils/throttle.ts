@@ -6,7 +6,7 @@
  */
 export function throttle<T = unknown>(
   fn: (...args: T[]) => any,
-  delay: number = 5000
+  delay: number = 20000
 ) {
   return function (lastTime: number, ...args: T[]) {
     const now = Date.now();
