@@ -2,7 +2,7 @@
   "name": "auto-sort-import",
   "displayName": "auto-sort-import",
   "description": "",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "ShunJun",
   "engines": {
     "vscode": "^1.65.0"
@@ -41,6 +41,8 @@
         "autoSortImport.graph": {
           "type": "array",
           "default": [
+            "/^react$/",
+            "",
             "external",
             "",
             "absolute",

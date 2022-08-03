@@ -20,11 +20,15 @@ export class Sentence {
   path?: string;
   annotationType?: AnnotationType;
 
-  constructor(editor: vscode.TextEditor, startLine?: number) {
+  constructor(
+    editor: vscode.TextEditor,
+    startLine?: number,
+    workSpaceDeps?: string[]
+  ) {
     this.editor = editor;
     this.startLine = startLine || 0;
     this.id = guid();
-    if (!startLine) {
+    if (startLine === undefined || startLine === null) {
       this.type = "empty";
       this.sentenceText = "";
       this.range = editor.document.lineAt(0).range;
@@ -42,7 +46,7 @@ export class Sentence {
         this.range.end.line
       ).text;
       this.path = this.getImportPath(lastLineText);
-      this.importType = this.getImportType(this.path);
+      this.importType = this.getImportType(this.path, workSpaceDeps);
     }
 
     if (this.type === "annotation") {
@@ -132,20 +136,32 @@ export class Sentence {
    * @param path
    * @returns ImportType
    */
-  private getImportType(path: string): ImportType {
+  private getImportType(
+    path: string,
+    workSpaceDeps: string[] = []
+  ): ImportType {
     const pathArr = path.split("/");
     const fileName = pathArr[pathArr.length - 1];
 
     if (/.(sa|sc|le|c)ss/.test(fileName)) {
       return "style";
     }
-    if (/^\/|@/.test(path)) {
-      return "absolute";
+    if (this.isExternal(path, workSpaceDeps)) {
+      return "external";
     }
+    // if (/^\/|@/.test(path)) {
+    //   return "absolute";
+    // }
     if (/^\./.test(path)) {
       return "relative";
     }
-    return "external";
+    return "absolute";
+  }
+
+  isExternal(path: string, workSpaceDeps: string[]): boolean {
+    return workSpaceDeps.some((packageName) => {
+      return new RegExp(`^${packageName}`).test(path);
+    });
   }
 
   /**

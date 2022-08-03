@@ -24,9 +24,6 @@ class Repairer {
       return;
     }
     clearIdPool();
-    // 获取当前 workspace 的依赖
-    const dependencies = new Dependencies(this.getWorkSpacePath());
-    const deps = dependencies.getDeps();
 
     try {
       const eol = getEol(editor);
@@ -51,6 +48,7 @@ class Repairer {
       let contents: string[] = sortedSentence.map(
         (sentence) => sentence.sentenceText
       );
+
       // let tempSentence = sortedSentence[0];
       // sortedSentence.forEach((sentence) => {
       //   if (
@@ -87,21 +85,7 @@ class Repairer {
     const sortedKeys = new Set();
 
     graph.forEach((gra) => {
-      if (this.isGraphType(gra)) {
-        const selected = sentences.filter((sentence) => {
-          if (
-            sentence.type === "import" &&
-            sentence.importType === gra &&
-            !sortedKeys.has(sentence.id)
-          ) {
-            sortedKeys.add(sentence.id);
-            return true;
-          } else {
-            return false;
-          }
-        });
-        sortedSentence.push(...this.sortSentences(selected));
-      } else if (this.isRegExp(gra)) {
+      if (this.isRegExp(gra)) {
         const selected = sentences.filter((sentence) => {
           if (
             sentence.type === "import" &&
@@ -115,7 +99,21 @@ class Repairer {
           }
         });
         sortedSentence.push(...this.sortSentences(selected));
-      } else if (gra === "") {
+      } else if (this.isGraphType(gra)) {
+        const selected = sentences.filter((sentence) => {
+          if (
+            sentence.type === "import" &&
+            sentence.importType === gra &&
+            !sortedKeys.has(sentence.id)
+          ) {
+            sortedKeys.add(sentence.id);
+            return true;
+          } else {
+            return false;
+          }
+        });
+        sortedSentence.push(...this.sortSentences(selected));
+      } else if (gra === "" && sortedSentence.length) {
         sortedSentence.push(new Sentence(this.editor));
       }
     });
@@ -131,6 +129,10 @@ class Repairer {
 
   sortSentences(sentences: Sentence[]) {
     const { sort } = getConfig();
+
+    if (sort === "off" || !sort) {
+      return sentences;
+    }
 
     sentences.sort((sentence1, sentence2) => {
       if (sentence1.type === "import" && sentence2.type === "import") {
@@ -183,9 +185,13 @@ class Repairer {
     let sentences: Sentence[] = [];
     const tempSentences: Sentence[] = [];
 
+    // 获取当前 workspace 的依赖
+    const dependencies = new Dependencies(this.getWorkSpacePath());
+    const deps = dependencies.getDeps();
+
     let i = 0;
-    while (i < Math.min(fileLinesNumber, 1000000)) {
-      const sentence = new Sentence(editor, i);
+    while (i < fileLinesNumber) {
+      const sentence = new Sentence(editor, i, deps);
 
       if (sentence.type === "other") {
         break;
@@ -205,6 +211,9 @@ class Repairer {
 
       i = sentence.range.end.line + 1;
     }
+
+    console.log(sentences);
+
     return sentences;
   }
 }

@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 import { Config, GraphType } from "../type";
 
 const defaultGraph: GraphType[] = [
+  "/^react$/",
+  "",
   "external",
   "",
   "absolute",

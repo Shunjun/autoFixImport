@@ -9,8 +9,12 @@ import * as path from "path";
 class Dependencies {
   private workspaceRoot: string;
 
+  /** 当前已解析的模块名, 防止重复解析 */
+  private resolvedPackageNameSet: Set<string>;
+
   constructor(workspaceRoot: string) {
     this.workspaceRoot = workspaceRoot;
+    this.resolvedPackageNameSet = new Set<string>();
   }
 
   /**
@@ -40,9 +44,15 @@ class Dependencies {
         return this.pathExists(this.getPackageRootInNodeModules(packageName));
       })
     ) {
+      this.resolvedPackageNameSet.clear();
       return rootDeps.flatMap((packageName) => {
-        const packageRoot = this.getPackageRootInNodeModules(packageName);
-        return this.getChildren(packageRoot);
+        if (this.resolvedPackageNameSet.has(packageName)) {
+          return [];
+        } else {
+          this.resolvedPackageNameSet.add(packageName);
+          const packageRoot = this.getPackageRootInNodeModules(packageName);
+          return this.getChildren(packageRoot);
+        }
       });
     }
     return null;
@@ -68,8 +78,13 @@ class Dependencies {
     const allDepsKeys = this.getMergedDepsInPackageJson(packageJsonPath);
 
     const childrenDeps = allDepsKeys.flatMap((packageName: string) => {
-      const packageRoot = this.getPackageRootInNodeModules(packageName);
-      return this.getChildren(packageRoot);
+      if (this.resolvedPackageNameSet.has(packageName)) {
+        return [];
+      } else {
+        this.resolvedPackageNameSet.add(packageName);
+        const packageRoot = this.getPackageRootInNodeModules(packageName);
+        return this.getChildren(packageRoot);
+      }
     });
 
     return allDepsKeys.concat(childrenDeps);
