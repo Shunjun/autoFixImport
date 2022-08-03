@@ -2,6 +2,8 @@ import { WorkspaceConfiguration } from "vscode";
 
 declare type ImportType = "external" | "absolute" | "relative" | "style";
 
+declare type GraphType = ImportType | `/${string}/` | "";
+
 declare type SentenceType = "import" | "annotation" | "empty" | "other";
 
 declare type AnnotationType = "single" | "multiLine";
@@ -15,9 +17,21 @@ declare interface Config extends WorkspaceConfiguration {
   blank: boolean;
 
   /**
-   * 排序额顺序
+   * import 的匹配顺序
    */
-  sort: ("external" | "absolute" | "relative" | "style")[];
+  graph: (
+    | "external"
+    | "absolute"
+    | "relative"
+    | "style"
+    | `/${string}/`
+    | ""
+  )[];
+
+  /**
+   * 排列顺序
+   */
+  sort: "desc" | "asc" | "off";
 
   /**
    * 移除 import 部分的注释行

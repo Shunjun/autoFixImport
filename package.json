@@ -38,15 +38,22 @@
           "default": true,
           "description": "使用空行分隔不同类型的import, 默认: true"
         },
-        "autoSortImport.sort": {
+        "autoSortImport.graph": {
           "type": "array",
           "default": [
             "external",
+            "",
             "absolute",
             "relative",
+            "",
             "style"
           ],
-          "description": "Import 排序规则,默认:['external','absolute','relative','style']"
+          "description": "import 会根据 graph 提供的顺序进行整理, graph 接受 'external' | 'absolute' | 'relative' | 'style' | '' | 正则表达式, 添加 '' 会插入一个空行 "
+        },
+        "autoSortImport.sort": {
+          "type": "string",
+          "default": "off",
+          "description": "按 path 字符串正序或倒序进行排序, off 关闭排序功能"
         },
         "autoSortImport.removeAnnotation": {
           "type": "boolean",

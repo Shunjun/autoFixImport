@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
+
 import { AnnotationType, ImportType, SentenceType } from "../type";
+import { guid } from "../utils/guid";
 import Range from "../utils/Range";
 
 const endRegExpMap = {
@@ -8,23 +10,29 @@ const endRegExpMap = {
 };
 
 export class Sentence {
+  id: string;
   type: SentenceType;
   editor: vscode.TextEditor;
   startLine: number;
   sentenceText: string;
   range: vscode.Range;
-
   importType?: ImportType;
   path?: string;
-
   annotationType?: AnnotationType;
 
-  constructor(editor: vscode.TextEditor, startLine: number) {
+  constructor(editor: vscode.TextEditor, startLine?: number) {
     this.editor = editor;
-    this.startLine = startLine;
-    this.type = this.getSentenceType(editor, startLine);
-    this.sentenceText = editor.document.lineAt(startLine).text;
-    this.range = editor.document.lineAt(startLine).range;
+    this.startLine = startLine || 0;
+    this.id = guid();
+    if (!startLine) {
+      this.type = "empty";
+      this.sentenceText = "";
+      this.range = editor.document.lineAt(0).range;
+    } else {
+      this.type = this.getSentenceType(editor, startLine);
+      this.sentenceText = editor.document.lineAt(startLine).text;
+      this.range = editor.document.lineAt(startLine).range;
+    }
 
     if (this.type === "import") {
       const { text, range } = this.analyses();

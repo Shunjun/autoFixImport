@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
+
 import { SuffixType } from "../type";
 import getConfig from "../utils/getConfig";
-import handleError from "../utils/handleError";
+import { handleError } from "../utils/message";
 import { throttle } from "../utils/throttle";
-import fixer from "./fixer";
+import Repairer from "./Repairer";
 
 interface FileInfoType {
   fileName: string;
@@ -14,15 +15,16 @@ class FileWatcher {
   // LRU 缓存, 保存最后修改过的文件
   lastFixFile: FileInfoType[] = [];
 
+  repairer: Repairer;
+
   constructor() {
+    const editor = vscode.window.activeTextEditor;
+    this.repairer = new Repairer(editor!);
+
     vscode.workspace.onWillSaveTextDocument(this.startWatch.bind(this));
   }
 
   startWatch(e: vscode.TextDocumentWillSaveEvent) {
-    // if (e.document.isDirty) {
-    //   return;
-    // }
-
     const { suffix } = getConfig();
     const fileName = e.document?.fileName;
     const fileSuffix = fileName.split(".").pop() as SuffixType;
@@ -41,7 +43,7 @@ class FileWatcher {
 
   throttleFixer = throttle((editor?: vscode.TextEditor) => {
     if (editor) {
-      fixer(editor);
+      this.repairer.fix();
     }
   });
 
