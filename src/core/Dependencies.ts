@@ -6,6 +6,9 @@
 import * as fs from "fs";
 import * as path from "path";
 
+// 为了加快解析速度, 缓存包名对应的依赖项
+const packageDependenciesMap = new Map();
+
 class Dependencies {
   private workspaceRoot: string;
 
@@ -28,11 +31,11 @@ class Dependencies {
     }
     const rootDepsKeys = this.getMergedDepsInPackageJson(rootPackageJsonPath);
 
-    const allDepsKeys = (
-      this.maybeUseNodeModules(rootDepsKeys) || this.maybeUsePnp(rootDepsKeys)
-    ).concat(rootDepsKeys);
+    // const allDepsKeys = (
+    //   this.maybeUseNodeModules(rootDepsKeys) || this.maybeUsePnp(rootDepsKeys)
+    // ).concat(rootDepsKeys);
 
-    return [...new Set(allDepsKeys).values()];
+    return [...new Set(rootDepsKeys).keys()];
   }
 
   /**
@@ -48,10 +51,14 @@ class Dependencies {
       return rootDeps.flatMap((packageName) => {
         if (this.resolvedPackageNameSet.has(packageName)) {
           return [];
+        } else if (packageDependenciesMap.has(packageName)) {
+          return packageDependenciesMap.get(packageName);
         } else {
           this.resolvedPackageNameSet.add(packageName);
           const packageRoot = this.getPackageRootInNodeModules(packageName);
-          return this.getChildren(packageRoot);
+          const deps = [...new Set(this.getChildren(packageRoot)).keys()];
+          packageDependenciesMap.set(packageName, deps);
+          return deps;
         }
       });
     }

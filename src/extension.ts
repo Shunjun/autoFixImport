@@ -7,15 +7,10 @@ import Repairer from "./core/Repairer";
  * 注册命令
  */
 function subscribeCommands(context: vscode.ExtensionContext) {
-  const editor = vscode.window.activeTextEditor; // 每次运行选中文件
-  if (!editor) {
-    return;
-  }
-  const repairer = new Repairer(editor);
-
   const autoFix = vscode.commands.registerCommand("extension.fixImport", () => {
+    const editor = vscode.window.activeTextEditor; // 每次运行选中文件
     if (editor) {
-      repairer.fix();
+      new Repairer(editor).fix();
     }
   });
 

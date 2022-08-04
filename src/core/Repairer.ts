@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import * as p from "perf_hooks";
 import { ImportType } from "../type";
 import getConfig from "../utils/getConfig";
 import getEol from "../utils/getEol";
@@ -10,7 +10,14 @@ import Dependencies from "./Dependencies";
 import { Sentence } from "./Sentence";
 
 class Repairer {
+  sortedKeys = new Set<string>();
+
   constructor(private editor: vscode.TextEditor) {}
+
+  initFix() {
+    clearIdPool();
+    this.sortedKeys.clear();
+  }
 
   /**
    * 执行修复
@@ -23,7 +30,7 @@ class Repairer {
     if (fileLinesNumber < 2) {
       return;
     }
-    clearIdPool();
+    this.initFix();
 
     try {
       const eol = getEol(editor);
@@ -33,34 +40,14 @@ class Repairer {
         return;
       }
 
-      const firstSentence = sentences[0];
-      const lastSentence = sentences[sentences.length - 1];
       // 需要替换的范围
-      const replaceRange = new Range({
-        startLine: firstSentence.range.start.line,
-        startCharacter: firstSentence.range.start.character,
-        endLine: lastSentence.range.end.line,
-        endCharacter: lastSentence.range.end.character,
-      });
-
+      const replaceRange = this.getReplaceRange(sentences);
+      // 排序
       const sortedSentence: Sentence[] = this.graphSentences(sentences);
 
       let contents: string[] = sortedSentence.map(
         (sentence) => sentence.sentenceText
       );
-
-      // let tempSentence = sortedSentence[0];
-      // sortedSentence.forEach((sentence) => {
-      //   if (
-      //     blank &&
-      //     (sentence?.importType !== tempSentence?.importType ||
-      //       sentence.type !== tempSentence.type)
-      //   ) {
-      //     contents.push("");
-      //   }
-      //   tempSentence = sentence;
-      //   contents.push(sentence.sentenceText);
-      // });
 
       const contentsText = contents.join(eol);
       const replaceText = document.getText(replaceRange.getOriginRange());
@@ -79,52 +66,67 @@ class Repairer {
     }
   }
 
+  getReplaceRange(sentences: Sentence[]) {
+    const firstSentence = sentences[0];
+    const lastSentence = sentences[sentences.length - 1];
+    // 需要替换的范围
+    return new Range({
+      startLine: firstSentence.range.start.line,
+      startCharacter: firstSentence.range.start.character,
+      endLine: lastSentence.range.end.line,
+      endCharacter: lastSentence.range.end.character,
+    });
+  }
+
   graphSentences(sentences: Sentence[]) {
     const { graph, removeAnnotation } = getConfig();
     const sortedSentence: Sentence[] = [];
-    const sortedKeys = new Set();
 
     graph.forEach((gra) => {
-      if (this.isRegExp(gra)) {
-        const selected = sentences.filter((sentence) => {
-          if (
-            sentence.type === "import" &&
-            new RegExp(gra.slice(1, -1)).test(sentence.path || "") &&
-            !sortedKeys.has(sentence.id)
-          ) {
-            sortedKeys.add(sentence.id);
-            return true;
-          } else {
-            return false;
-          }
-        });
+      const graphKind = this.getGraphKind(gra);
+
+      if (["graphType", "regexp"].includes(graphKind)) {
+        const selected = sentences.filter(
+          this.generateFilter(gra, graphKind as "graphType" | "regexp")
+        );
         sortedSentence.push(...this.sortSentences(selected));
-      } else if (this.isGraphType(gra)) {
-        const selected = sentences.filter((sentence) => {
-          if (
-            sentence.type === "import" &&
-            sentence.importType === gra &&
-            !sortedKeys.has(sentence.id)
-          ) {
-            sortedKeys.add(sentence.id);
-            return true;
-          } else {
-            return false;
-          }
-        });
-        sortedSentence.push(...this.sortSentences(selected));
-      } else if (gra === "" && sortedSentence.length) {
+      } else if (
+        graphKind === "empty" &&
+        sortedSentence.length &&
+        !this.lastIsEmpty(sortedSentence)
+      ) {
         sortedSentence.push(new Sentence(this.editor));
       }
     });
 
-    if (!removeAnnotation) {
-      sortedSentence.push(
-        ...sentences.filter((sentence) => sentence.type === "annotation")
-      );
+    // 处理未包含的 import
+    sortedSentence.push(
+      ...sentences.filter(
+        (sentence) =>
+          sentence.type === "import" && !this.sortedKeys.has(sentence.id)
+      )
+    );
+
+    // 弹出多余的空行
+    if (this.lastIsEmpty(sortedSentence) && graph[graph.length - 1] !== "") {
+      sortedSentence.pop();
+    }
+
+    const annotationSentences = sentences.filter(
+      (sentence) => sentence.type === "annotation"
+    );
+    if (!removeAnnotation && annotationSentences.length) {
+      if (!this.lastIsEmpty(sortedSentence)) {
+        sortedSentence.push(new Sentence(this.editor));
+      }
+      sortedSentence.push(...annotationSentences);
     }
 
     return sortedSentence;
+  }
+
+  lastIsEmpty(sentences: Sentence[]) {
+    return sentences[sentences.length - 1].type === "empty";
   }
 
   sortSentences(sentences: Sentence[]) {
@@ -146,6 +148,29 @@ class Repairer {
     return sentences;
   }
 
+  /**
+   * 过滤方法
+   * @param graph
+   * @param type
+   * @returns
+   */
+  generateFilter(graph: string, type: "graphType" | "regexp") {
+    return (sentence: Sentence) => {
+      if (
+        sentence.type === "import" &&
+        !this.sortedKeys.has(sentence.id) &&
+        (type === "graphType"
+          ? sentence.importType === graph
+          : new RegExp(graph.slice(1, -1)).test(sentence.path || ""))
+      ) {
+        this.sortedKeys.add(sentence.id);
+        return true;
+      } else {
+        return false;
+      }
+    };
+  }
+
   getCharCodeSum(path: string) {
     const minCharCode = "a".charCodeAt(0);
     path = path.toLowerCase();
@@ -153,6 +178,17 @@ class Repairer {
       const code = path.charCodeAt(index);
       return sum + (isNaN(code) ? minCharCode : code);
     }, 0);
+  }
+
+  getGraphKind(graph: string) {
+    if (this.isGraphType(graph)) {
+      return "graphType";
+    } else if (this.isRegExp(graph)) {
+      return "regexp";
+    } else if (graph === "") {
+      return "empty";
+    }
+    return "error";
   }
 
   isGraphType(graph: string) {
@@ -186,8 +222,10 @@ class Repairer {
     const tempSentences: Sentence[] = [];
 
     // 获取当前 workspace 的依赖
+    const start = p.performance.now();
     const dependencies = new Dependencies(this.getWorkSpacePath());
     const deps = dependencies.getDeps();
+    console.log(p.performance.now() - start);
 
     let i = 0;
     while (i < fileLinesNumber) {
@@ -211,8 +249,6 @@ class Repairer {
 
       i = sentence.range.end.line + 1;
     }
-
-    console.log(sentences);
 
     return sentences;
   }

@@ -15,12 +15,7 @@ class FileWatcher {
   // LRU 缓存, 保存最后修改过的文件
   lastFixFile: FileInfoType[] = [];
 
-  repairer: Repairer;
-
   constructor() {
-    const editor = vscode.window.activeTextEditor;
-    this.repairer = new Repairer(editor!);
-
     vscode.workspace.onWillSaveTextDocument(this.startWatch.bind(this));
   }
 
@@ -43,7 +38,7 @@ class FileWatcher {
 
   throttleFixer = throttle((editor?: vscode.TextEditor) => {
     if (editor) {
-      this.repairer.fix();
+      new Repairer(editor).fix();
     }
   });
 
